@@ -18,7 +18,7 @@ type BulkStatus = 'idle' | 'loading-list' | 'ready' | 'importing' | 'done';
 
 interface BulkResult {
   imported: string[];
-  skipped: string[];
+  skipped: { word: string; reason: string }[];
   errors: { word: string; error: string }[];
 }
 
@@ -37,7 +37,7 @@ export function ImportPanel() {
   const [bulkStatus, setBulkStatus] = useState<BulkStatus>('idle');
   const [wordList, setWordList] = useState<string[]>([]);
   const [wordListMeta, setWordListMeta] = useState<{ totalInList: number; alreadyImported: number; available: number } | null>(null);
-  const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0, currentWord: '' });
+  const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0, currentWord: '', outerBatch: 0, totalBatches: 0 });
   const [bulkResult, setBulkResult] = useState<BulkResult | null>(null);
   const [bulkError, setBulkError] = useState('');
   const bulkAbortRef = useRef(false);
@@ -104,27 +104,51 @@ export function ImportPanel() {
     if (wordList.length === 0) return;
     bulkAbortRef.current = false;
     setBulkStatus('importing');
-    setBulkProgress({ current: 0, total: wordList.length, currentWord: '' });
     setBulkResult(null);
 
     const result: BulkResult = { imported: [], skipped: [], errors: [] };
-    const CHUNK = 10;
+    const OUTER_BATCH = 500; // 500 words per "outer" batch (re-fetches word list each time)
+    const CHUNK = 10;        // 10 words per backend request within a batch
+    const totalBatches = Math.ceil(bulkCount / OUTER_BATCH);
 
-    for (let i = 0; i < wordList.length; i += CHUNK) {
+    for (let b = 0; b < totalBatches; b++) {
       if (bulkAbortRef.current) break;
-      const chunk = wordList.slice(i, i + CHUNK);
-      setBulkProgress({ current: i, total: wordList.length, currentWord: chunk[0] });
-      try {
-        const r = await adminBatchImport(chunk, geminiKey || undefined, geminiModel || undefined);
-        result.imported.push(...r.imported);
-        result.skipped.push(...r.skipped);
-        result.errors.push(...r.errors);
-      } catch (e: any) {
-        result.errors.push(...chunk.map(w => ({ word: w, error: e.message })));
+
+      // For batches after the first, re-fetch the word list to get remaining words
+      let batch: string[];
+      if (b === 0) {
+        batch = wordList.slice(0, Math.min(wordList.length, OUTER_BATCH));
+      } else {
+        try {
+          const remaining = Math.min(bulkCount - b * OUTER_BATCH, OUTER_BATCH);
+          const data = await adminGetWordlist(remaining);
+          batch = data.words;
+          if (batch.length === 0) break;
+        } catch {
+          break;
+        }
       }
+
+      const batchTotal = batch.length;
+      setBulkProgress({ current: 0, total: batchTotal, currentWord: batch[0] || '', outerBatch: b + 1, totalBatches });
+
+      for (let i = 0; i < batch.length; i += CHUNK) {
+        if (bulkAbortRef.current) break;
+        const chunk = batch.slice(i, i + CHUNK);
+        setBulkProgress({ current: i, total: batchTotal, currentWord: chunk[0], outerBatch: b + 1, totalBatches });
+        try {
+          const r = await adminBatchImport(chunk, geminiKey || undefined, geminiModel || undefined);
+          result.imported.push(...r.imported);
+          result.skipped.push(...r.skipped);
+          result.errors.push(...r.errors);
+        } catch (e: any) {
+          result.errors.push(...chunk.map(w => ({ word: w, error: e.message })));
+        }
+      }
+
+      setBulkProgress(p => ({ ...p, current: batchTotal }));
     }
 
-    setBulkProgress(p => ({ ...p, current: wordList.length }));
     setBulkResult(result);
     setBulkStatus('done');
   }
@@ -247,7 +271,7 @@ export function ImportPanel() {
                 onChange={e => setBulkCount(parseInt((e.target as HTMLSelectElement).value))}
                 class="bg-bg-base border border-border text-text-primary rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand"
               >
-                {[25, 50, 100, 250, 500].map(n => (
+                {[25, 50, 100, 250, 500, 1000, 2000, 4500].map(n => (
                   <option key={n} value={n}>{n} words</option>
                 ))}
               </select>
@@ -291,6 +315,11 @@ export function ImportPanel() {
 
           {bulkStatus === 'importing' && (
             <div class="space-y-3">
+              {bulkProgress.totalBatches > 1 && (
+                <div class="text-xs text-brand font-medium">
+                  Batch {bulkProgress.outerBatch} of {bulkProgress.totalBatches} (500 words each)
+                </div>
+              )}
               <div class="flex items-center justify-between text-sm">
                 <span class="text-text-secondary">
                   Processing: <span class="text-text-primary font-mono">{bulkProgress.currentWord || '...'}</span>

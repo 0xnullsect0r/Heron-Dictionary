@@ -80,7 +80,7 @@ export async function adminBatchImport(
   words: string[],
   geminiApiKey?: string,
   geminiModel?: string
-): Promise<{ imported: string[]; skipped: string[]; errors: { word: string; error: string }[] }> {
+): Promise<{ sessionId?: string; imported: string[]; skipped: { word: string; reason: string }[]; errors: { word: string; error: string }[] }> {
   const res = await fetch(`${BASE}/admin/import/wiktionary-batch`, {
     method: 'POST',
     headers: getAdminHeaders(),
