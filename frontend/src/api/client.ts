@@ -64,3 +64,36 @@ export async function adminImportJson(data: object[]) {
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
+
+export async function adminGetWordlist(count: number): Promise<{
+  words: string[];
+  totalInList: number;
+  alreadyImported: number;
+  available: number;
+}> {
+  const res = await fetch(`${BASE}/admin/import/wordlist?count=${count}`, { headers: getAdminHeaders() });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function adminBatchImport(
+  words: string[],
+  geminiApiKey?: string
+): Promise<{ imported: string[]; skipped: string[]; errors: { word: string; error: string }[] }> {
+  const res = await fetch(`${BASE}/admin/import/wiktionary-batch`, {
+    method: 'POST',
+    headers: getAdminHeaders(),
+    body: JSON.stringify({ words, geminiApiKey }),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function adminTestGemini(geminiApiKey: string): Promise<{ ok: boolean; sample?: any; error?: string }> {
+  const res = await fetch(`${BASE}/admin/import/test-gemini`, {
+    method: 'POST',
+    headers: getAdminHeaders(),
+    body: JSON.stringify({ geminiApiKey }),
+  });
+  return res.json();
+}

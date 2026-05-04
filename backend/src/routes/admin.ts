@@ -1,6 +1,8 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import db from '../db';
-import { fetchWiktionaryWord } from '../wiktionary';
+import { fetchWiktionaryWord, WiktionaryDraft } from '../wiktionary';
+import { generateDefinitions } from '../gemini';
+import { WORD_LIST } from '../data/wordlist';
 
 const router = Router();
 
@@ -37,7 +39,7 @@ router.get('/stats', adminGuard, (_req, res) => {
   const total = (db.prepare('SELECT COUNT(*) as n FROM words').get() as any).n;
   const fullyDefined = (db.prepare(
     `SELECT COUNT(*) as n FROM words w WHERE (
-      SELECT COUNT(DISTINCT level) FROM definitions WHERE word_id = w.id
+      SELECT COUNT(DISTINCT level) FROM definitions WHERE word_id = w.id AND text != ''
     ) = 3`
   ).get() as any).n;
   const recent = db.prepare('SELECT word, updated_at FROM words ORDER BY updated_at DESC LIMIT 10').all();
@@ -122,6 +124,170 @@ router.post('/import/json', adminGuard, (req, res) => {
   if (!Array.isArray(words)) return res.status(400).json({ error: 'Expected an array' });
   const results = importWords(words);
   res.json(results);
+});
+
+// GET /api/admin/import/wordlist?count=N — returns words not yet in DB
+router.get('/import/wordlist', adminGuard, (req, res) => {
+  const count = Math.min(parseInt(req.query.count as string) || 50, 500);
+  const existing = new Set(
+    (db.prepare('SELECT word FROM words').all() as any[]).map((r: any) => r.word.toLowerCase())
+  );
+  const available = WORD_LIST.filter(w => !existing.has(w.toLowerCase())).slice(0, count);
+  res.json({
+    words: available,
+    totalInList: WORD_LIST.length,
+    alreadyImported: existing.size,
+    available: WORD_LIST.filter(w => !existing.has(w.toLowerCase())).length,
+  });
+});
+
+// POST /api/admin/import/wiktionary-batch — bulk import with optional AI
+router.post('/import/wiktionary-batch', adminGuard, async (req, res) => {
+  const { words, geminiApiKey } = req.body as { words: string[]; geminiApiKey?: string };
+  if (!Array.isArray(words) || words.length === 0) {
+    return res.status(400).json({ error: 'words array required' });
+  }
+
+  const results = {
+    imported: [] as string[],
+    skipped: [] as string[],
+    errors: [] as { word: string; error: string }[],
+  };
+
+  // Fetch Wiktionary for all words, 5 concurrent
+  const drafts: WiktionaryDraft[] = [];
+  const CONCURRENCY = 5;
+
+  for (let i = 0; i < words.length; i += CONCURRENCY) {
+    const chunk = words.slice(i, i + CONCURRENCY);
+    const chunkResults = await Promise.allSettled(
+      chunk.map(word => fetchWiktionaryWord(word).then(d => ({ word, draft: d })))
+    );
+    for (const r of chunkResults) {
+      if (r.status === 'fulfilled') {
+        if (r.value.draft) {
+          drafts.push(r.value.draft);
+        } else {
+          results.skipped.push(r.value.word);
+        }
+      } else {
+        const word = words[i + chunkResults.indexOf(r)];
+        results.errors.push({ word, error: String(r.reason) });
+      }
+    }
+  }
+
+  // If Gemini key provided, generate basic+advanced for words that need it
+  if (geminiApiKey && drafts.length > 0) {
+    const needsAI = drafts.filter(d => !d.hasBasicFromSimple);
+    const AI_BATCH = 5;
+
+    for (let i = 0; i < needsAI.length; i += AI_BATCH) {
+      const batch = needsAI.slice(i, i + AI_BATCH);
+      try {
+        const inputs = batch.map(d => ({
+          word: d.word,
+          partOfSpeech: d.part_of_speech,
+          standardDefinitions: d.definitions
+            .filter(def => def.level === 'standard')
+            .slice(0, 5)
+            .map(def => def.text),
+        }));
+        const aiResults = await generateDefinitions(inputs, geminiApiKey);
+
+        for (const ai of aiResults) {
+          const draft = needsAI.find(d => d.word === ai.word);
+          if (!draft) continue;
+          if (ai.basic?.text) {
+            draft.definitions.unshift({
+              level: 'basic',
+              text: ai.basic.text,
+              sentences: ai.basic.sentences || [],
+              examples: ai.basic.examples || [],
+              sort_order: 0,
+            });
+            draft.hasBasicFromSimple = false; // mark as AI-generated
+          }
+          if (ai.advanced?.text) {
+            draft.definitions.push({
+              level: 'advanced',
+              text: ai.advanced.text,
+              sentences: ai.advanced.sentences || [],
+              examples: ai.advanced.examples || [],
+              sort_order: 0,
+            });
+          }
+        }
+      } catch (e: any) {
+        console.error(`Gemini batch error (words ${i}-${i + AI_BATCH}):`, e.message);
+        // Continue without AI for this batch
+      }
+    }
+
+    // Also generate advanced for words that DO have Simple basic (no advanced yet)
+    const needsAdvanced = drafts.filter(
+      d => d.hasBasicFromSimple && !d.definitions.some(def => def.level === 'advanced')
+    );
+    for (let i = 0; i < needsAdvanced.length; i += AI_BATCH) {
+      const batch = needsAdvanced.slice(i, i + AI_BATCH);
+      try {
+        const inputs = batch.map(d => ({
+          word: d.word,
+          partOfSpeech: d.part_of_speech,
+          standardDefinitions: d.definitions
+            .filter(def => def.level === 'standard')
+            .slice(0, 5)
+            .map(def => def.text),
+        }));
+        const aiResults = await generateDefinitions(inputs, geminiApiKey);
+        for (const ai of aiResults) {
+          const draft = needsAdvanced.find(d => d.word === ai.word);
+          if (!draft || !ai.advanced?.text) continue;
+          draft.definitions.push({
+            level: 'advanced',
+            text: ai.advanced.text,
+            sentences: ai.advanced.sentences || [],
+            examples: ai.advanced.examples || [],
+            sort_order: 0,
+          });
+        }
+      } catch (e: any) {
+        console.error(`Gemini advanced batch error:`, e.message);
+      }
+    }
+  }
+
+  // Import all drafts, skip words already in DB
+  for (const draft of drafts) {
+    const existing = db.prepare('SELECT id FROM words WHERE word = ?').get(draft.word.toLowerCase());
+    if (existing) {
+      results.skipped.push(draft.word);
+      continue;
+    }
+    const r = importWords([draft]);
+    if (r.errors.length > 0) {
+      results.errors.push({ word: draft.word, error: r.errors[0] });
+    } else {
+      results.imported.push(draft.word);
+    }
+  }
+
+  res.json(results);
+});
+
+// POST /api/admin/import/test-gemini — test Gemini API key
+router.post('/import/test-gemini', adminGuard, async (req, res) => {
+  const { geminiApiKey } = req.body;
+  if (!geminiApiKey) return res.status(400).json({ error: 'geminiApiKey required' });
+  try {
+    const results = await generateDefinitions(
+      [{ word: 'test', partOfSpeech: 'noun', standardDefinitions: ['A procedure to assess quality'] }],
+      geminiApiKey
+    );
+    res.json({ ok: true, sample: results[0] });
+  } catch (e: any) {
+    res.status(400).json({ error: e.message });
+  }
 });
 
 export function importWords(words: any[]) {

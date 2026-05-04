@@ -42,6 +42,7 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_words_word ON words(word);
   CREATE INDEX IF NOT EXISTS idx_definitions_word_id ON definitions(word_id);
   CREATE INDEX IF NOT EXISTS idx_definitions_level ON definitions(level);
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_def_unique ON definitions(word_id, level, sort_order);
 `);
 
 export default db;
