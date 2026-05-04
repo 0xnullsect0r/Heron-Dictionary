@@ -13,12 +13,12 @@ interface LevelSelectorProps {
 
 export function LevelSelector({ value, onChange }: LevelSelectorProps) {
   return (
-    <div className="flex items-center gap-3">
-      <span className="text-sm text-gray-400 font-medium">Definition level:</span>
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-text-secondary font-medium">Definition level:</span>
       <select
         value={value}
         onChange={e => onChange((e.target as HTMLSelectElement).value as Level)}
-        className="bg-navy-800 border border-navy-700 text-white rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-electric-500 cursor-pointer"
+        class="bg-bg-surface border border-border text-text-primary rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
       >
         {levels.map(l => (
           <option key={l.value} value={l.value}>{l.label} — {l.description}</option>
@@ -27,3 +27,4 @@ export function LevelSelector({ value, onChange }: LevelSelectorProps) {
     </div>
   );
 }
+
