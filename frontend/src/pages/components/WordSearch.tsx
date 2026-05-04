@@ -42,9 +42,9 @@ export function WordSearch({ onSelect }: WordSearchProps) {
   }
 
   return (
-    <div className="relative w-full max-w-xl">
-      <div className="relative">
-        <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+    <div class="relative w-full max-w-xl">
+      <div class="relative">
+        <Search size={18} class="absolute left-4 top-1/2 -translate-y-1/2 text-text-disabled pointer-events-none" />
         <input
           ref={inputRef}
           type="text"
@@ -53,25 +53,25 @@ export function WordSearch({ onSelect }: WordSearchProps) {
           onKeyDown={handleKeyDown}
           onFocus={() => results.length > 0 && setOpen(true)}
           placeholder="Search for a word..."
-          className="w-full bg-navy-800 border border-navy-700 text-white rounded-xl pl-11 pr-10 py-3 text-base focus:outline-none focus:ring-2 focus:ring-electric-500 focus:border-transparent placeholder-gray-500"
+          class="w-full bg-bg-surface border border-border text-text-primary rounded-xl pl-11 pr-10 py-3 text-base focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent placeholder-text-disabled"
         />
         {query && (
-          <button onClick={() => { setQuery(''); setResults([]); setOpen(false); inputRef.current?.focus(); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
+          <button onClick={() => { setQuery(''); setResults([]); setOpen(false); inputRef.current?.focus(); }} class="absolute right-3 top-1/2 -translate-y-1/2 text-text-disabled hover:text-text-primary">
             <X size={16} />
           </button>
         )}
       </div>
 
       {open && results.length > 0 && (
-        <div className="absolute z-50 w-full mt-2 bg-navy-800 border border-navy-700 rounded-xl shadow-xl overflow-hidden">
+        <div class="absolute z-50 w-full mt-2 bg-bg-surface border border-border rounded-xl shadow-xl overflow-hidden">
           {results.map(r => (
             <button
               key={r.id}
               onClick={() => handleSelect(r.word)}
-              className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-navy-700 transition-colors border-b border-navy-700/50 last:border-0"
+              class="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-bg-elevated transition-colors border-b border-border/50 last:border-0"
             >
-              <span className="text-white font-medium">{r.word}</span>
-              <span className="text-gray-500 text-xs italic">{r.part_of_speech}</span>
+              <span class="text-text-primary font-medium">{r.word}</span>
+              <span class="text-text-disabled text-xs italic">{r.part_of_speech}</span>
             </button>
           ))}
         </div>
@@ -79,3 +79,4 @@ export function WordSearch({ onSelect }: WordSearchProps) {
     </div>
   );
 }
+

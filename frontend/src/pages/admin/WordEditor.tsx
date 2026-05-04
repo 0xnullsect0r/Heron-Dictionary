@@ -110,71 +110,71 @@ export function WordEditor({ word, onSave, onCancel }: WordEditorProps) {
   }
 
   const levelColors: Record<Level, string> = {
-    basic: 'text-blue-400',
-    standard: 'text-electric-400',
-    advanced: 'text-purple-400',
+    basic: 'text-brand',
+    standard: 'text-brand',
+    advanced: 'text-text-secondary',
   };
 
   return (
     <div className="max-w-3xl space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-white">{word ? `Edit: ${word.word}` : 'Add new word'}</h2>
-          <p className="text-gray-400 mt-1 text-sm">Fill in all three definition levels for a fully cleared word entry.</p>
+          <h2 className="text-2xl font-bold text-text-primary">{word ? `Edit: ${word.word}` : 'Add new word'}</h2>
+          <p className="text-text-secondary mt-1 text-sm">Fill in all three definition levels for a fully cleared word entry.</p>
         </div>
         <Button variant="ghost" onClick={onCancel}><X size={18} /></Button>
       </div>
 
-      {error && <div className="bg-red-900/40 border border-red-700 text-red-300 rounded-lg px-4 py-3 text-sm">{error}</div>}
+      {error && <div className="bg-danger/10 border border-danger/40 text-danger rounded-lg px-4 py-3 text-sm">{error}</div>}
 
       <form onSubmit={handleSave} className="space-y-6">
         {/* Core fields */}
         <Card>
           <CardHeader>
-            <BookOpen size={18} className="text-electric-400" />
-            <h3 className="text-lg font-semibold text-white">Word details</h3>
+            <BookOpen size={18} className="text-brand" />
+            <h3 className="text-lg font-semibold text-text-primary">Word details</h3>
           </CardHeader>
           <CardBody className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1.5">Word</label>
+                <label className="block text-sm font-medium text-text-secondary mb-1.5">Word</label>
                 <input
                   type="text"
                   value={wordText}
                   onInput={e => setWordText((e.target as HTMLInputElement).value)}
                   disabled={!!word}
-                  className="w-full bg-navy-900 border border-navy-600 text-white rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-electric-500 disabled:opacity-50 font-mono"
+                  className="w-full bg-bg-base border border-border text-text-primary rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand disabled:opacity-50 font-mono"
                   placeholder="enter word"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1.5">Part of speech</label>
+                <label className="block text-sm font-medium text-text-secondary mb-1.5">Part of speech</label>
                 <input
                   type="text"
                   value={pos}
                   onInput={e => setPos((e.target as HTMLInputElement).value)}
-                  className="w-full bg-navy-900 border border-navy-600 text-white rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-electric-500 placeholder-gray-500"
+                  className="w-full bg-bg-base border border-border text-text-primary rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand placeholder-text-disabled"
                   placeholder="noun, verb, adjective..."
                 />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1.5">Etymology (origin / derivation)</label>
+              <label className="block text-sm font-medium text-text-secondary mb-1.5">Etymology (origin / derivation)</label>
               <textarea
                 value={etymology}
                 onInput={e => setEtymology((e.target as HTMLTextAreaElement).value)}
                 rows={3}
-                className="w-full bg-navy-900 border border-navy-600 text-white rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-electric-500 placeholder-gray-500 resize-y"
+                className="w-full bg-bg-base border border-border text-text-primary rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand placeholder-text-disabled resize-y"
                 placeholder="From Latin... Originally meaning..."
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1.5">Usage notes</label>
+              <label className="block text-sm font-medium text-text-secondary mb-1.5">Usage notes</label>
               <textarea
                 value={usageNotes}
                 onInput={e => setUsageNotes((e.target as HTMLTextAreaElement).value)}
                 rows={2}
-                className="w-full bg-navy-900 border border-navy-600 text-white rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-electric-500 placeholder-gray-500 resize-y"
+                className="w-full bg-bg-base border border-border text-text-primary rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand placeholder-text-disabled resize-y"
                 placeholder="Notes on how the word is used..."
               />
             </div>
@@ -187,28 +187,28 @@ export function WordEditor({ word, onSave, onCancel }: WordEditorProps) {
             <button
               type="button"
               onClick={() => setExpandedLevel(expandedLevel === level ? '' : level)}
-              className="w-full px-6 py-4 border-b border-navy-700 flex items-center gap-2 hover:bg-navy-700/30 transition-colors"
+              className="w-full px-6 py-4 border-b border-border flex items-center gap-2 hover:bg-bg-elevated/30 transition-colors"
             >
-              {expandedLevel === level ? <ChevronDown size={18} className="text-gray-400" /> : <ChevronRight size={18} className="text-gray-400" />}
+              {expandedLevel === level ? <ChevronDown size={18} className="text-text-secondary" /> : <ChevronRight size={18} className="text-text-secondary" />}
               <span className={`text-lg font-semibold capitalize ${levelColors[level]}`}>{level}</span>
-              <span className="text-gray-500 text-sm ml-1">definition</span>
-              {levels[level].text && <span className="ml-auto text-xs text-green-400">✓ filled</span>}
+              <span className="text-text-disabled text-sm ml-1">definition</span>
+              {levels[level].text && <span className="ml-auto text-xs text-success">✓ filled</span>}
             </button>
             {expandedLevel === level && (
               <CardBody className="space-y-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1.5">Definition text</label>
+                  <label className="block text-sm font-medium text-text-secondary mb-1.5">Definition text</label>
                   <textarea
                     value={levels[level].text}
                     onInput={e => updateLevel(level, 'text', (e.target as HTMLTextAreaElement).value)}
                     rows={3}
-                    className="w-full bg-navy-900 border border-navy-600 text-white rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-electric-500 placeholder-gray-500 resize-y"
+                    className="w-full bg-bg-base border border-border text-text-primary rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand placeholder-text-disabled resize-y"
                     placeholder={level === 'basic' ? 'Plain language definition for anyone...' : level === 'standard' ? 'Dictionary-grade definition...' : 'Full technical/nuanced definition...'}
                   />
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <label className="text-sm font-medium text-gray-300">Example sentences</label>
+                    <label className="text-sm font-medium text-text-secondary">Example sentences</label>
                     <Button type="button" variant="ghost" size="sm" onClick={() => addListItem(v => updateLevel(level, 'sentences', v), levels[level].sentences)}>
                       <Plus size={14} /> Add
                     </Button>
@@ -223,11 +223,11 @@ export function WordEditor({ word, onSave, onCancel }: WordEditorProps) {
                             const next = [...levels[level].sentences]; next[i] = (e.target as HTMLInputElement).value;
                             updateLevel(level, 'sentences', next);
                           }}
-                          className="flex-1 bg-navy-900 border border-navy-600 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-electric-500 placeholder-gray-500"
+                          className="flex-1 bg-bg-base border border-border text-text-primary rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand placeholder-text-disabled"
                           placeholder="Write a sentence using the word..."
                         />
                         {levels[level].sentences.length > 1 && (
-                          <button type="button" onClick={() => { const next = levels[level].sentences.filter((_, j) => j !== i); updateLevel(level, 'sentences', next); }} className="text-gray-600 hover:text-red-400 transition-colors">
+                          <button type="button" onClick={() => { const next = levels[level].sentences.filter((_, j) => j !== i); updateLevel(level, 'sentences', next); }} className="text-text-disabled hover:text-danger transition-colors">
                             <Trash2 size={14} />
                           </button>
                         )}
@@ -237,7 +237,7 @@ export function WordEditor({ word, onSave, onCancel }: WordEditorProps) {
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <label className="text-sm font-medium text-gray-300">Usage examples</label>
+                    <label className="text-sm font-medium text-text-secondary">Usage examples</label>
                     <Button type="button" variant="ghost" size="sm" onClick={() => addListItem(v => updateLevel(level, 'examples', v), levels[level].examples)}>
                       <Plus size={14} /> Add
                     </Button>
@@ -252,11 +252,11 @@ export function WordEditor({ word, onSave, onCancel }: WordEditorProps) {
                             const next = [...levels[level].examples]; next[i] = (e.target as HTMLInputElement).value;
                             updateLevel(level, 'examples', next);
                           }}
-                          className="flex-1 bg-navy-900 border border-navy-600 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-electric-500 placeholder-gray-500"
+                          className="flex-1 bg-bg-base border border-border text-text-primary rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand placeholder-text-disabled"
                           placeholder="Real-world example of usage..."
                         />
                         {levels[level].examples.length > 1 && (
-                          <button type="button" onClick={() => { const next = levels[level].examples.filter((_, j) => j !== i); updateLevel(level, 'examples', next); }} className="text-gray-600 hover:text-red-400 transition-colors">
+                          <button type="button" onClick={() => { const next = levels[level].examples.filter((_, j) => j !== i); updateLevel(level, 'examples', next); }} className="text-text-disabled hover:text-danger transition-colors">
                             <Trash2 size={14} />
                           </button>
                         )}
@@ -271,47 +271,47 @@ export function WordEditor({ word, onSave, onCancel }: WordEditorProps) {
 
         {/* Synonyms */}
         <Card>
-          <CardHeader><h3 className="text-lg font-semibold text-white">Synonyms, related words & idioms</h3></CardHeader>
+          <CardHeader><h3 className="text-lg font-semibold text-text-primary">Synonyms, related words & idioms</h3></CardHeader>
           <CardBody className="space-y-5">
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium text-gray-300">Synonyms</label>
+                <label className="text-sm font-medium text-text-secondary">Synonyms</label>
                 <Button type="button" variant="ghost" size="sm" onClick={() => addListItem(setSynonyms, synonyms)}><Plus size={14} /> Add</Button>
               </div>
               <div className="flex flex-wrap gap-2">
                 {synonyms.map((s, i) => (
-                  <div key={i} className="flex items-center gap-1 bg-navy-700 rounded-lg px-2 py-1">
+                  <div key={i} className="flex items-center gap-1 bg-bg-elevated rounded-lg px-2 py-1">
                     <input value={s} onInput={e => updateListItem(setSynonyms, synonyms, i, (e.target as HTMLInputElement).value)} className="bg-transparent text-sm text-gray-200 outline-none w-24" placeholder="synonym" />
-                    <button type="button" onClick={() => removeListItem(setSynonyms, synonyms, i)} className="text-gray-600 hover:text-red-400"><X size={12} /></button>
+                    <button type="button" onClick={() => removeListItem(setSynonyms, synonyms, i)} className="text-text-disabled hover:text-danger"><X size={12} /></button>
                   </div>
                 ))}
               </div>
             </div>
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium text-gray-300">Related words</label>
+                <label className="text-sm font-medium text-text-secondary">Related words</label>
                 <Button type="button" variant="ghost" size="sm" onClick={() => addListItem(setRelatedWords, relatedWords)}><Plus size={14} /> Add</Button>
               </div>
               <div className="flex flex-wrap gap-2">
                 {relatedWords.map((w, i) => (
-                  <div key={i} className="flex items-center gap-1 bg-navy-900 border border-navy-700 rounded-lg px-2 py-1">
-                    <input value={w} onInput={e => updateListItem(setRelatedWords, relatedWords, i, (e.target as HTMLInputElement).value)} className="bg-transparent text-sm text-gray-400 outline-none w-28" placeholder="related word" />
-                    <button type="button" onClick={() => removeListItem(setRelatedWords, relatedWords, i)} className="text-gray-600 hover:text-red-400"><X size={12} /></button>
+                  <div key={i} className="flex items-center gap-1 bg-bg-base border border-border rounded-lg px-2 py-1">
+                    <input value={w} onInput={e => updateListItem(setRelatedWords, relatedWords, i, (e.target as HTMLInputElement).value)} className="bg-transparent text-sm text-text-secondary outline-none w-28" placeholder="related word" />
+                    <button type="button" onClick={() => removeListItem(setRelatedWords, relatedWords, i)} className="text-text-disabled hover:text-danger"><X size={12} /></button>
                   </div>
                 ))}
               </div>
             </div>
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium text-gray-300">Idioms</label>
+                <label className="text-sm font-medium text-text-secondary">Idioms</label>
                 <Button type="button" variant="ghost" size="sm" onClick={() => setIdioms([...idioms, { phrase: '', meaning: '' }])}><Plus size={14} /> Add</Button>
               </div>
               <div className="space-y-2">
                 {idioms.map((idiom, i) => (
                   <div key={i} className="flex gap-2 items-start">
-                    <input value={idiom.phrase} onInput={e => { const n = [...idioms]; n[i] = { ...n[i], phrase: (e.target as HTMLInputElement).value }; setIdioms(n); }} className="flex-1 bg-navy-900 border border-navy-600 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-electric-500 placeholder-gray-500" placeholder="Idiom phrase" />
-                    <input value={idiom.meaning} onInput={e => { const n = [...idioms]; n[i] = { ...n[i], meaning: (e.target as HTMLInputElement).value }; setIdioms(n); }} className="flex-1 bg-navy-900 border border-navy-600 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-electric-500 placeholder-gray-500" placeholder="Meaning" />
-                    {idioms.length > 1 && <button type="button" onClick={() => setIdioms(idioms.filter((_, j) => j !== i))} className="text-gray-600 hover:text-red-400 mt-2"><Trash2 size={14} /></button>}
+                    <input value={idiom.phrase} onInput={e => { const n = [...idioms]; n[i] = { ...n[i], phrase: (e.target as HTMLInputElement).value }; setIdioms(n); }} className="flex-1 bg-bg-base border border-border text-text-primary rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand placeholder-text-disabled" placeholder="Idiom phrase" />
+                    <input value={idiom.meaning} onInput={e => { const n = [...idioms]; n[i] = { ...n[i], meaning: (e.target as HTMLInputElement).value }; setIdioms(n); }} className="flex-1 bg-bg-base border border-border text-text-primary rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand placeholder-text-disabled" placeholder="Meaning" />
+                    {idioms.length > 1 && <button type="button" onClick={() => setIdioms(idioms.filter((_, j) => j !== i))} className="text-text-disabled hover:text-danger mt-2"><Trash2 size={14} /></button>}
                   </div>
                 ))}
               </div>

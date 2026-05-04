@@ -42,18 +42,18 @@ export function ImportPanel() {
   return (
     <div className="max-w-2xl space-y-8">
       <div>
-        <h2 className="text-2xl font-bold text-white">Import</h2>
-        <p className="text-gray-400 mt-1 text-sm">Fetch from Wiktionary or bulk import from a JSON file.</p>
+        <h2 className="text-2xl font-bold text-text-primary">Import</h2>
+        <p className="text-text-secondary mt-1 text-sm">Fetch from Wiktionary or bulk import from a JSON file.</p>
       </div>
 
       {/* Wiktionary fetch */}
       <Card>
         <CardHeader>
-          <Globe size={18} className="text-electric-400" />
-          <h3 className="text-lg font-semibold text-white">Fetch from Wiktionary</h3>
+          <Globe size={18} className="text-brand" />
+          <h3 className="text-lg font-semibold text-text-primary">Fetch from Wiktionary</h3>
         </CardHeader>
         <CardBody className="space-y-4">
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-text-secondary">
             Fetches a draft definition from English Wiktionary. The standard definition is pre-filled; you'll need to write the basic and advanced tiers and add sentences.
           </p>
           <form onSubmit={handleWiktionary} className="flex gap-3">
@@ -62,21 +62,21 @@ export function ImportPanel() {
               value={wiktWord}
               onInput={e => setWiktWord((e.target as HTMLInputElement).value)}
               placeholder="Enter a word..."
-              className="flex-1 bg-navy-900 border border-navy-600 text-white rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-electric-500 placeholder-gray-500"
+              className="flex-1 bg-bg-base border border-border text-text-primary rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand placeholder-text-disabled"
             />
             <Button type="submit" disabled={wiktLoading || !wiktWord.trim()}>
               <Globe size={16} />{wiktLoading ? 'Fetching...' : 'Fetch'}
             </Button>
           </form>
-          {wiktError && <div className="bg-red-900/40 border border-red-700 text-red-300 rounded-lg px-4 py-3 text-sm">{wiktError}</div>}
+          {wiktError && <div className="bg-danger/10 border border-danger/40 text-danger rounded-lg px-4 py-3 text-sm">{wiktError}</div>}
           {wiktResult && (
-            <div className="bg-navy-900 border border-navy-700 rounded-lg p-4 space-y-2">
-              <div className="flex items-center gap-2 text-green-400 text-sm font-medium">
+            <div className="bg-bg-base border border-border rounded-lg p-4 space-y-2">
+              <div className="flex items-center gap-2 text-success text-sm font-medium">
                 <CheckCircle size={16} /> Draft created for "{wiktResult.word}"
               </div>
-              <p className="text-gray-400 text-xs">Part of speech: <span className="text-gray-300">{wiktResult.part_of_speech || '—'}</span></p>
-              <p className="text-gray-400 text-xs">Standard definition: <span className="text-gray-300">{wiktResult.definitions?.find((d: any) => d.level === 'standard')?.text || '—'}</span></p>
-              <p className="text-gray-500 text-xs">Note: This draft has been saved. Go to Dashboard → Edit to fill in the basic and advanced tiers and add sentences.</p>
+              <p className="text-text-secondary text-xs">Part of speech: <span className="text-text-secondary">{wiktResult.part_of_speech || '—'}</span></p>
+              <p className="text-text-secondary text-xs">Standard definition: <span className="text-text-secondary">{wiktResult.definitions?.find((d: any) => d.level === 'standard')?.text || '—'}</span></p>
+              <p className="text-text-disabled text-xs">Note: This draft has been saved. Go to Dashboard → Edit to fill in the basic and advanced tiers and add sentences.</p>
             </div>
           )}
         </CardBody>
@@ -85,30 +85,30 @@ export function ImportPanel() {
       {/* JSON import */}
       <Card>
         <CardHeader>
-          <FileJson size={18} className="text-electric-400" />
-          <h3 className="text-lg font-semibold text-white">Import from JSON</h3>
+          <FileJson size={18} className="text-brand" />
+          <h3 className="text-lg font-semibold text-text-primary">Import from JSON</h3>
         </CardHeader>
         <CardBody className="space-y-4">
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-text-secondary">
             Upload a JSON file containing an array of word objects. Each word should follow the dictionary data format (word, part_of_speech, etymology, definitions array with level/text/sentences/examples).
           </p>
           <div
-            className="border-2 border-dashed border-navy-600 rounded-xl p-8 text-center cursor-pointer hover:border-electric-600 transition-colors"
+            className="border-2 border-dashed border-border rounded-xl p-8 text-center cursor-pointer hover:border-brand transition-colors"
             onClick={() => fileRef.current?.click()}
           >
-            <Upload size={28} className="mx-auto text-gray-500 mb-2" />
-            <p className="text-gray-400 text-sm">Click to select a JSON file</p>
-            <p className="text-gray-600 text-xs mt-1">or drag and drop</p>
+            <Upload size={28} className="mx-auto text-text-disabled mb-2" />
+            <p className="text-text-secondary text-sm">Click to select a JSON file</p>
+            <p className="text-text-disabled text-xs mt-1">or drag and drop</p>
             <input ref={fileRef} type="file" accept=".json" onChange={handleJsonUpload} className="hidden" />
           </div>
-          {jsonLoading && <div className="flex items-center gap-2 text-gray-400 text-sm"><div className="w-4 h-4 border-2 border-electric-500 border-t-transparent rounded-full animate-spin" /> Importing...</div>}
-          {jsonError && <div className="bg-red-900/40 border border-red-700 text-red-300 rounded-lg px-4 py-3 text-sm">{jsonError}</div>}
+          {jsonLoading && <div className="flex items-center gap-2 text-text-secondary text-sm"><div className="w-4 h-4 border-2 border-brand border-t-transparent rounded-full animate-spin" /> Importing...</div>}
+          {jsonError && <div className="bg-danger/10 border border-danger/40 text-danger rounded-lg px-4 py-3 text-sm">{jsonError}</div>}
           {jsonResult && (
-            <div className="bg-navy-900 border border-navy-700 rounded-lg p-4 space-y-2">
-              <div className="flex items-center gap-2 text-green-400 text-sm font-medium"><CheckCircle size={16} /> Import complete</div>
-              <p className="text-gray-300 text-sm">Imported: <strong>{jsonResult.imported}</strong> · Skipped: <strong>{jsonResult.skipped}</strong></p>
+            <div className="bg-bg-base border border-border rounded-lg p-4 space-y-2">
+              <div className="flex items-center gap-2 text-success text-sm font-medium"><CheckCircle size={16} /> Import complete</div>
+              <p className="text-text-secondary text-sm">Imported: <strong>{jsonResult.imported}</strong> · Skipped: <strong>{jsonResult.skipped}</strong></p>
               {jsonResult.errors.length > 0 && (
-                <details className="text-xs text-red-400">
+                <details className="text-xs text-danger">
                   <summary className="cursor-pointer">Show errors ({jsonResult.errors.length})</summary>
                   <ul className="mt-1 space-y-1">{jsonResult.errors.map((e: string, i: number) => <li key={i}>{e}</li>)}</ul>
                 </details>

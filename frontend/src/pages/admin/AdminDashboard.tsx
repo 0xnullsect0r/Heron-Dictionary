@@ -36,34 +36,33 @@ export function AdminDashboard({ onEditWord, onNewWord }: AdminDashboardProps) {
   const filtered = words.filter(w => w.word.toLowerCase().includes(search.toLowerCase()));
 
   const statCards = stats ? [
-    { label: 'Total words', value: stats.total, icon: BookOpen, color: 'text-electric-400' },
-    { label: 'Fully defined', value: stats.fullyDefined, icon: CheckCircle, color: 'text-green-400' },
-    { label: 'Incomplete', value: stats.incomplete, icon: AlertCircle, color: 'text-yellow-400' },
+    { label: 'Total words', value: stats.total, icon: BookOpen, color: 'text-brand' },
+    { label: 'Fully defined', value: stats.fullyDefined, icon: CheckCircle, color: 'text-success' },
+    { label: 'Incomplete', value: stats.incomplete, icon: AlertCircle, color: 'text-warning' },
   ] : [];
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
+    <div class="space-y-8">
+      <div class="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-white">Dashboard</h2>
-          <p className="text-gray-400 mt-1 text-sm">Manage your dictionary words and definitions.</p>
+          <h2 class="text-2xl font-bold text-text-primary">Dashboard</h2>
+          <p class="text-text-secondary mt-1 text-sm">Manage your dictionary words and definitions.</p>
         </div>
-        <div className="flex gap-3">
+        <div class="flex gap-3">
           <Button variant="secondary" onClick={load} size="sm"><RefreshCw size={14} /> Refresh</Button>
           <Button onClick={onNewWord} size="sm"><BookOpen size={14} /> Add Word</Button>
         </div>
       </div>
 
-      {/* Stat cards */}
       {stats && (
-        <div className="grid grid-cols-3 gap-4">
+        <div class="grid grid-cols-3 gap-4">
           {statCards.map(s => (
             <Card key={s.label}>
               <CardBody className="flex items-center gap-4">
-                <s.icon size={28} className={s.color} />
+                <s.icon size={28} class={s.color} />
                 <div>
-                  <p className="text-2xl font-bold text-white">{s.value}</p>
-                  <p className="text-gray-400 text-sm">{s.label}</p>
+                  <p class="text-2xl font-bold text-text-primary">{s.value}</p>
+                  <p class="text-text-secondary text-sm">{s.label}</p>
                 </div>
               </CardBody>
             </Card>
@@ -71,39 +70,38 @@ export function AdminDashboard({ onEditWord, onNewWord }: AdminDashboardProps) {
         </div>
       )}
 
-      {/* Word list */}
       <Card>
         <CardHeader>
-          <BookOpen size={18} className="text-electric-400" />
-          <h3 className="text-lg font-semibold text-white flex-1">Words</h3>
+          <BookOpen size={18} class="text-brand" />
+          <h3 class="text-lg font-semibold text-text-primary flex-1">Words</h3>
           <input
             type="text"
             value={search}
             onInput={e => setSearch((e.target as HTMLInputElement).value)}
             placeholder="Filter words..."
-            className="bg-navy-900 border border-navy-600 text-white rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-electric-500 w-48"
+            class="bg-bg-base border border-border text-text-primary rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand w-48"
           />
         </CardHeader>
-        <div className="divide-y divide-navy-700">
+        <div class="divide-y divide-border">
           {loading ? (
-            <div className="flex justify-center py-12">
-              <div className="w-6 h-6 border-2 border-electric-500 border-t-transparent rounded-full animate-spin" />
+            <div class="flex justify-center py-12">
+              <div class="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--color-brand)', borderTopColor: 'transparent' }} />
             </div>
           ) : filtered.length === 0 ? (
-            <div className="p-6 text-center text-gray-500 text-sm">No words found.</div>
+            <div class="p-6 text-center text-text-disabled text-sm">No words found.</div>
           ) : (
             filtered.map(w => (
-              <div key={w.id} className="px-6 py-4 flex items-center justify-between hover:bg-navy-700/30 transition-colors">
-                <div className="flex items-center gap-4">
+              <div key={w.id} class="px-6 py-4 flex items-center justify-between hover:bg-bg-elevated/30 transition-colors">
+                <div class="flex items-center gap-4">
                   <div>
-                    <p className="text-white font-medium">{w.word}</p>
-                    <p className="text-gray-500 text-xs italic">{w.part_of_speech}</p>
+                    <p class="text-text-primary font-medium">{w.word}</p>
+                    <p class="text-text-disabled text-xs italic">{w.part_of_speech}</p>
                   </div>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${w.definition_count >= 3 ? 'bg-green-900/40 text-green-400 border border-green-800' : 'bg-yellow-900/40 text-yellow-400 border border-yellow-800'}`}>
+                  <span class={`text-xs px-2 py-0.5 rounded-full ${w.definition_count >= 3 ? 'bg-success/10 text-success border border-success/30' : 'bg-warning/10 text-warning border border-warning/30'}`}>
                     {w.definition_count}/3 levels
                   </span>
                 </div>
-                <div className="flex gap-2">
+                <div class="flex gap-2">
                   <Button variant="ghost" size="sm" onClick={() => onEditWord(w)}><Edit size={14} /></Button>
                   <Button variant="danger" size="sm" onClick={() => handleDelete(w.id, w.word)}><Trash2 size={14} /></Button>
                 </div>
@@ -113,18 +111,17 @@ export function AdminDashboard({ onEditWord, onNewWord }: AdminDashboardProps) {
         </div>
       </Card>
 
-      {/* Recent activity */}
       {stats && stats.recent.length > 0 && (
         <Card>
           <CardHeader>
-            <Clock size={18} className="text-electric-400" />
-            <h3 className="text-lg font-semibold text-white">Recently updated</h3>
+            <Clock size={18} class="text-brand" />
+            <h3 class="text-lg font-semibold text-text-primary">Recently updated</h3>
           </CardHeader>
           <CardBody className="space-y-2">
             {stats.recent.map((r, i) => (
-              <div key={i} className="flex items-center justify-between text-sm">
-                <span className="text-gray-300">{r.word}</span>
-                <span className="text-gray-500 font-mono text-xs">{new Date(r.updated_at).toLocaleDateString()}</span>
+              <div key={i} class="flex items-center justify-between text-sm">
+                <span class="text-text-secondary">{r.word}</span>
+                <span class="text-text-disabled font-mono text-xs">{new Date(r.updated_at).toLocaleDateString()}</span>
               </div>
             ))}
           </CardBody>
@@ -133,3 +130,4 @@ export function AdminDashboard({ onEditWord, onNewWord }: AdminDashboardProps) {
     </div>
   );
 }
+
