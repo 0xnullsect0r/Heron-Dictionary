@@ -5,7 +5,7 @@ import { WordEntry } from './components/WordEntry';
 import { WordEntry as WordEntryType } from '../types/dictionary';
 import { getWord } from '../api/client';
 
-export function DictionaryPage() {
+export function DictionaryPage(_props: { path?: string; default?: boolean }) {
   const [entry, setEntry] = useState<WordEntryType | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');

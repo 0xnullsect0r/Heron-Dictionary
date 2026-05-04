@@ -38,7 +38,7 @@ export async function fetchWiktionaryWord(word: string): Promise<WiktionaryDraft
   const res = await fetch(url, { headers: { 'User-Agent': 'Heron-Dictionary/1.0' } });
   if (!res.ok) return null;
 
-  const data: WiktionaryResponse = await res.json();
+  const data = await res.json() as WiktionaryResponse;
   const english = data['en'];
   if (!english || english.length === 0) return null;
 
