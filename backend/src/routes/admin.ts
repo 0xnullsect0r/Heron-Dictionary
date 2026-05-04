@@ -193,29 +193,26 @@ router.post('/import/wiktionary-batch', adminGuard, async (req, res) => {
     errors: [] as { word: string; error: string }[],
   };
 
-  // Fetch Wiktionary for all words, 5 concurrent
+  // Fetch Wiktionary serially with a delay to avoid rate limiting.
+  // Each word makes 2 requests (en + simple), so even 300ms spacing
+  // keeps us well under Wiktionary's threshold.
   const drafts: WiktionaryDraft[] = [];
-  const CONCURRENCY = 5;
+  const DELAY_MS = 350; // ms between words
 
-  for (let i = 0; i < words.length; i += CONCURRENCY) {
-    const chunk = words.slice(i, i + CONCURRENCY);
-    const chunkResults = await Promise.allSettled(
-      chunk.map(word => fetchWiktionaryWord(word).then(r => ({ word, ...r })))
-    );
-    for (const r of chunkResults) {
-      if (r.status === 'fulfilled') {
-        if (r.value.draft) {
-          drafts.push(r.value.draft);
-        } else {
-          results.skipped.push({ word: r.value.word, reason: r.value.skipReason || 'unknown' });
-          logEvent.run(sessionId, r.value.word, 'skipped', r.value.skipReason || 'unknown', 0, 0);
-        }
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i];
+    if (i > 0) await new Promise<void>(r => setTimeout(r, DELAY_MS));
+    try {
+      const r = await fetchWiktionaryWord(word);
+      if (r.draft) {
+        drafts.push(r.draft);
       } else {
-        const idx = chunkResults.indexOf(r);
-        const word = chunk[idx] || 'unknown';
-        results.errors.push({ word, error: String(r.reason) });
-        logEvent.run(sessionId, word, 'error', null, 0, 0);
+        results.skipped.push({ word, reason: r.skipReason || 'unknown' });
+        logEvent.run(sessionId, word, 'skipped', r.skipReason || 'unknown', 0, 0);
       }
+    } catch (e: any) {
+      results.errors.push({ word, error: String(e) });
+      logEvent.run(sessionId, word, 'error', null, 0, 0);
     }
   }
 

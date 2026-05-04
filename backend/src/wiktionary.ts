@@ -103,10 +103,7 @@ async function fetchSimpleWiktionary(
 ): Promise<Array<{ text: string; sentences: string[]; examples: string[] }>> {
   try {
     const url = `https://simple.wiktionary.org/w/api.php?action=parse&page=${encodeURIComponent(word)}&prop=wikitext&format=json`;
-    const res = await fetch(url, {
-      headers: { 'User-Agent': 'Heron-Dictionary/1.0' },
-      signal: AbortSignal.timeout(8000),
-    });
+    const res = await fetchWithRetry(url);
     if (!res.ok) return [];
     const data = await res.json() as any;
     const wikitext: string = data?.parse?.wikitext?.['*'] || '';
@@ -117,15 +114,41 @@ async function fetchSimpleWiktionary(
   }
 }
 
+const sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
+
+async function fetchWithRetry(url: string, maxRetries = 4): Promise<Response> {
+  const BACKOFF = [5000, 15000, 30000, 60000]; // wait times on 429: 5s, 15s, 30s, 60s
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        headers: { 'User-Agent': 'Heron-Dictionary/1.0 (self-hosted; contact admin)' },
+        signal: AbortSignal.timeout(12000),
+      });
+    } catch (e: any) {
+      // Network/timeout error — don't retry, bubble up
+      throw e;
+    }
+    if (res.status !== 429) return res;
+
+    // Rate limited — respect Retry-After header if present, else use backoff table
+    const retryAfterHeader = res.headers.get('Retry-After');
+    const waitMs = retryAfterHeader
+      ? parseInt(retryAfterHeader, 10) * 1000
+      : (BACKOFF[attempt] ?? 60000);
+    console.log(`[wiktionary] 429 on ${url} — waiting ${waitMs / 1000}s (attempt ${attempt + 1}/${maxRetries + 1})`);
+    await sleep(waitMs);
+  }
+  // All retries exhausted — return a synthetic 429 response
+  return new Response(null, { status: 429 });
+}
+
 export async function fetchWiktionaryWord(word: string): Promise<FetchResult> {
   try {
     const url = `https://en.wiktionary.org/api/rest_v1/page/definition/${encodeURIComponent(word)}`;
     let res: Response;
     try {
-      res = await fetch(url, {
-        headers: { 'User-Agent': 'Heron-Dictionary/1.0' },
-        signal: AbortSignal.timeout(10000),
-      });
+      res = await fetchWithRetry(url);
     } catch (e: any) {
       if (e.name === 'TimeoutError' || e.name === 'AbortError') {
         return { draft: null, skipReason: 'timeout (en.wiktionary.org)' };
