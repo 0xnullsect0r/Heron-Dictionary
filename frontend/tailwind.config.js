@@ -4,30 +4,26 @@ export default {
   theme: {
     extend: {
       colors: {
-        navy: {
-          50: '#f8fafc',
-          100: '#f1f5f9',
-          200: '#e2e8f0',
-          300: '#cbd5e1',
-          400: '#94a3b8',
-          500: '#64748b',
-          600: '#475569',
-          700: '#334155',
-          800: '#1e293b',
-          900: '#0f172a',
+        bg: {
+          base: 'var(--color-bg-base)',
+          surface: 'var(--color-bg-surface)',
+          elevated: 'var(--color-bg-elevated)',
+          hover: 'var(--color-bg-hover)',
         },
-        electric: {
-          50: '#fff7ed',
-          100: '#ffedd5',
-          200: '#fed7aa',
-          300: '#fdba74',
-          400: '#fb923c',
-          500: '#f97316',
-          600: '#ea580c',
-          700: '#c2410c',
-          800: '#9a3412',
-          900: '#7c2d12',
+        border: { DEFAULT: 'var(--color-border)' },
+        brand: {
+          DEFAULT: 'var(--color-brand)',
+          hover: 'var(--color-brand-hover)',
+          muted: 'var(--color-brand-muted)',
         },
+        text: {
+          primary: 'var(--color-text-primary)',
+          secondary: 'var(--color-text-secondary)',
+          disabled: 'var(--color-text-disabled)',
+        },
+        danger: 'var(--color-danger)',
+        warning: 'var(--color-warning)',
+        success: 'var(--color-success)',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],

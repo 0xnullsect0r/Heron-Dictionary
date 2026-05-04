@@ -1,7 +1,11 @@
-# Build stage — includes devDependencies (tsc, tsx, etc.)
+# Build stage - installs all deps and compiles TypeScript
 FROM node:20-slim AS build
 
 WORKDIR /app
+
+RUN apt-get update -qq && \
+    apt-get install -y --no-install-recommends python3 make g++ && \
+    rm -rf /var/lib/apt/lists/*
 
 COPY package*.json ./
 RUN npm ci
@@ -9,14 +13,16 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-# Runtime stage — only production deps, smaller image
+# Runtime stage - copy compiled output and prod node_modules from build
 FROM node:20-slim
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm ci --omit=dev
+RUN apt-get update -qq && \
+    apt-get install -y --no-install-recommends curl && \
+    rm -rf /var/lib/apt/lists/*
 
+COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/data ./data
 

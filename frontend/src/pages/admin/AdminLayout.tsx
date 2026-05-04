@@ -1,5 +1,8 @@
 import { ComponentChildren } from 'preact';
+import { useState } from 'preact/hooks';
 import { BookOpen, LayoutDashboard, Plus, Upload, LogOut } from 'lucide-preact';
+import { ThemeSelector } from '../../components/ui/ThemeSelector';
+import { ThemeEditor } from '../../components/ui/ThemeEditor';
 
 interface AdminLayoutProps {
   children: ComponentChildren;
@@ -15,31 +18,36 @@ const navItems = [
 ];
 
 export function AdminLayout({ children, onLogout, currentPath, onNavigate }: AdminLayoutProps) {
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editorKey, setEditorKey] = useState<string | undefined>();
+
   function isActive(item: typeof navItems[0]) {
     return item.exact ? currentPath === item.path : currentPath.startsWith(item.path) && currentPath !== '/admin';
   }
 
+  function openEditor(key?: string) { setEditorKey(key); setEditorOpen(true); }
+
   return (
-    <div className="min-h-screen bg-navy-900 flex">
+    <div class="min-h-screen bg-bg-base flex">
       {/* Sidebar */}
-      <aside className="w-64 bg-navy-800 border-r border-navy-700 flex flex-col fixed inset-y-0 left-0 z-10">
-        <div className="h-16 flex items-center px-6 border-b border-navy-700">
-          <BookOpen size={20} className="text-electric-500" />
-          <span className="ml-2 text-white font-bold">Heron</span>
-          <span className="ml-2 text-xs font-semibold text-electric-400 uppercase tracking-wider">Admin</span>
+      <aside class="w-64 bg-bg-surface border-r border-border flex flex-col fixed inset-y-0 left-0 z-10">
+        <div class="h-16 flex items-center px-6 border-b border-border">
+          <BookOpen size={20} class="text-brand" />
+          <span class="ml-2 text-text-primary font-bold">Heron</span>
+          <span class="ml-2 text-xs font-semibold text-brand uppercase tracking-wider">Admin</span>
         </div>
 
-        <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+        <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
           {navItems.map(item => {
             const active = isActive(item);
             return (
               <button
                 key={item.path}
                 onClick={() => onNavigate(item.path)}
-                className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors w-full ${
+                class={`flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors w-full ${
                   active
-                    ? 'bg-electric-600/20 text-electric-400 border border-electric-700/40'
-                    : 'text-gray-400 hover:bg-navy-700 hover:text-gray-100'
+                    ? 'bg-brand/20 text-brand border border-brand/40'
+                    : 'text-text-secondary hover:bg-bg-elevated hover:text-text-primary'
                 }`}
               >
                 <item.icon size={18} />
@@ -49,10 +57,10 @@ export function AdminLayout({ children, onLogout, currentPath, onNavigate }: Adm
           })}
         </nav>
 
-        <div className="p-4 border-t border-navy-700">
+        <div class="p-4 border-t border-border">
           <button
             onClick={onLogout}
-            className="flex items-center space-x-3 px-3 py-2.5 w-full rounded-lg text-sm font-medium text-gray-400 hover:bg-navy-700 hover:text-red-400 transition-colors"
+            class="flex items-center space-x-3 px-3 py-2.5 w-full rounded-lg text-sm font-medium text-text-secondary hover:bg-bg-elevated hover:text-danger transition-colors"
           >
             <LogOut size={18} />
             <span>Sign out</span>
@@ -61,18 +69,22 @@ export function AdminLayout({ children, onLogout, currentPath, onNavigate }: Adm
       </aside>
 
       {/* Main content */}
-      <div className="flex-1 ml-64 flex flex-col min-h-screen">
-        <header className="h-16 bg-navy-800 border-b border-navy-700 flex items-center px-6">
-          <h1 className="text-lg font-semibold text-white">Heron Dictionary Admin</h1>
-          <div className="ml-auto flex items-center gap-3">
-            <a href="/" className="text-sm text-gray-400 hover:text-gray-200 transition-colors">← View Dictionary</a>
-            <div className="w-8 h-8 rounded-full bg-electric-600 flex items-center justify-center text-white text-sm font-bold">A</div>
+      <div class="flex-1 ml-64 flex flex-col min-h-screen">
+        <header class="h-16 bg-bg-surface border-b border-border flex items-center px-6">
+          <h1 class="text-lg font-semibold text-text-primary">Heron Dictionary Admin</h1>
+          <div class="ml-auto flex items-center gap-3">
+            <a href="/" class="text-sm text-text-disabled hover:text-text-primary transition-colors">View Dictionary</a>
+            <ThemeSelector onOpenEditor={openEditor} />
+            <div class="w-8 h-8 rounded-full bg-brand flex items-center justify-center text-text-primary text-sm font-bold">A</div>
           </div>
         </header>
-        <main className="flex-1 p-6 overflow-auto">
+        <main class="flex-1 p-6 overflow-auto">
           {children}
         </main>
       </div>
+
+      {editorOpen && <ThemeEditor editKey={editorKey} onClose={() => setEditorOpen(false)} />}
     </div>
   );
 }
+

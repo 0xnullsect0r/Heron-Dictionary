@@ -1,5 +1,11 @@
 import { render } from 'preact';
 import './index.css';
 import { App } from './app';
+import { ThemeProvider } from './contexts/ThemeContext';
 
-render(<App />, document.getElementById('app')!);
+render(
+  <ThemeProvider>
+    <App />
+  </ThemeProvider>,
+  document.getElementById('app')!
+);
