@@ -4,9 +4,10 @@ import { AdminLayout } from './AdminLayout';
 import { AdminDashboard } from './AdminDashboard';
 import { WordEditor } from './WordEditor';
 import { ImportPanel } from './ImportPanel';
+import { LogsPage } from './LogsPage';
 import { WordEntry } from '../../types/dictionary';
 
-type AdminView = 'dashboard' | 'new' | 'edit' | 'import';
+type AdminView = 'dashboard' | 'new' | 'edit' | 'import' | 'logs';
 
 interface AdminPageProps {
   path?: string;
@@ -29,6 +30,7 @@ export function AdminPage({ path = '/admin' }: AdminPageProps) {
   function handleNavigate(p: string) {
     if (p === '/admin/new') setView('new');
     else if (p === '/admin/import') setView('import');
+    else if (p === '/admin/logs') setView('logs');
     else { setView('dashboard'); setEditWord(undefined); }
   }
 
@@ -36,6 +38,7 @@ export function AdminPage({ path = '/admin' }: AdminPageProps) {
     if (view === 'new') return '/admin/new';
     if (view === 'import') return '/admin/import';
     if (view === 'edit') return '/admin/edit';
+    if (view === 'logs') return '/admin/logs';
     return '/admin';
   }
 
@@ -55,6 +58,8 @@ export function AdminPage({ path = '/admin' }: AdminPageProps) {
         />
       )}
       {view === 'import' && <ImportPanel />}
+      {view === 'logs' && <LogsPage />}
     </AdminLayout>
   );
 }
+

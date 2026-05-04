@@ -98,3 +98,25 @@ export async function adminTestGemini(geminiApiKey: string, geminiModel?: string
   });
   return res.json();
 }
+
+export async function adminGetLogs(page = 1, limit = 20): Promise<{
+  sessions: any[];
+  total: number;
+  page: number;
+  limit: number;
+}> {
+  const res = await fetch(`${BASE}/admin/logs?page=${page}&limit=${limit}`, { headers: getAdminHeaders() });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function adminGetLogDetail(id: number): Promise<{
+  session: any;
+  events: any[];
+  aiLogs: any[];
+}> {
+  const res = await fetch(`${BASE}/admin/logs/${id}`, { headers: getAdminHeaders() });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+

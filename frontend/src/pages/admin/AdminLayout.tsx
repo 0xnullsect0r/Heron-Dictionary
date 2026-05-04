@@ -1,6 +1,6 @@
 import { ComponentChildren } from 'preact';
 import { useState } from 'preact/hooks';
-import { BookOpen, LayoutDashboard, Plus, Upload, LogOut } from 'lucide-preact';
+import { BookOpen, LayoutDashboard, Plus, Upload, LogOut, ScrollText } from 'lucide-preact';
 import { ThemeSelector } from '../../components/ui/ThemeSelector';
 import { ThemeEditor } from '../../components/ui/ThemeEditor';
 
@@ -15,6 +15,7 @@ const navItems = [
   { path: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
   { path: '/admin/new', label: 'Add Word', icon: Plus, exact: false },
   { path: '/admin/import', label: 'Import', icon: Upload, exact: false },
+  { path: '/admin/logs', label: 'Logs', icon: ScrollText, exact: false },
 ];
 
 export function AdminLayout({ children, onLogout, currentPath, onNavigate }: AdminLayoutProps) {

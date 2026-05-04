@@ -6,7 +6,6 @@ import { WORD_LIST } from '../data/wordlist';
 
 const router = Router();
 
-// Simple password guard
 function adminGuard(req: Request, res: Response, next: NextFunction) {
   if (process.env.ADMIN_ENABLED !== 'true') {
     return res.status(403).json({ error: 'Admin disabled' });
@@ -100,14 +99,31 @@ router.delete('/definitions/:id', adminGuard, (req, res) => {
 // POST /api/admin/import/wiktionary/:word — fetch draft from Wiktionary and save it
 router.post('/import/wiktionary/:word', adminGuard, async (req, res) => {
   try {
-    const draft = await fetchWiktionaryWord(req.params.word);
-    if (!draft) return res.status(404).json({ error: 'Word not found on Wiktionary' });
-
-    // Save the draft into the database
-    const result = importWords([draft]);
-    if (result.errors.length > 0 && result.imported === 0) {
-      return res.status(409).json({ error: result.errors[0] });
+    const result = await fetchWiktionaryWord(req.params.word);
+    if (!result.draft) {
+      return res.status(404).json({ error: `Word not found: ${result.skipReason}` });
     }
+    const draft = result.draft;
+
+    // Log as a single-word import session
+    const sessionRow = db.prepare(
+      'INSERT INTO import_sessions (type, total_requested) VALUES (?, 1)'
+    ).run('single');
+    const sessionId = sessionRow.lastInsertRowid as number;
+
+    const r = importWords([draft]);
+    const defsCount = draft.definitions.length;
+
+    if (r.errors.length > 0 && r.imported === 0) {
+      db.prepare('INSERT INTO import_events (session_id, word, status, error_message) VALUES (?,?,?,?)')
+        .run(sessionId, draft.word, 'error', r.errors[0]);
+      db.prepare('UPDATE import_sessions SET total_errors=1 WHERE id=?').run(sessionId);
+      return res.status(409).json({ error: r.errors[0] });
+    }
+
+    db.prepare('INSERT INTO import_events (session_id, word, status, definitions_count) VALUES (?,?,?,?)')
+      .run(sessionId, draft.word, 'imported', defsCount);
+    db.prepare('UPDATE import_sessions SET total_imported=1 WHERE id=?').run(sessionId);
 
     const row = db.prepare('SELECT id FROM words WHERE word=?').get(draft.word) as any;
     const savedWord = db.prepare('SELECT * FROM words WHERE id=?').get(row.id) as any;
@@ -122,13 +138,23 @@ router.post('/import/wiktionary/:word', adminGuard, async (req, res) => {
 router.post('/import/json', adminGuard, (req, res) => {
   const words = req.body;
   if (!Array.isArray(words)) return res.status(400).json({ error: 'Expected an array' });
+
+  const sessionRow = db.prepare(
+    'INSERT INTO import_sessions (type, total_requested) VALUES (?, ?)'
+  ).run('json', words.length);
+  const sessionId = sessionRow.lastInsertRowid as number;
+
   const results = importWords(words);
+
+  db.prepare('UPDATE import_sessions SET total_imported=?, total_errors=? WHERE id=?')
+    .run(results.imported, results.errors.length, sessionId);
+
   res.json(results);
 });
 
 // GET /api/admin/import/wordlist?count=N — returns words not yet in DB
 router.get('/import/wordlist', adminGuard, (req, res) => {
-  const count = Math.min(parseInt(req.query.count as string) || 50, 500);
+  const count = Math.min(parseInt(req.query.count as string) || 50, 4500);
   const existing = new Set(
     (db.prepare('SELECT word FROM words').all() as any[]).map((r: any) => r.word.toLowerCase())
   );
@@ -148,9 +174,22 @@ router.post('/import/wiktionary-batch', adminGuard, async (req, res) => {
     return res.status(400).json({ error: 'words array required' });
   }
 
+  // Create import session
+  const sessionRow = db.prepare(
+    'INSERT INTO import_sessions (type, total_requested) VALUES (?, ?)'
+  ).run('bulk', words.length);
+  const sessionId = sessionRow.lastInsertRowid as number;
+
+  const logEvent = db.prepare(
+    'INSERT INTO import_events (session_id, word, status, skip_reason, definitions_count, ai_used) VALUES (?,?,?,?,?,?)'
+  );
+  const logAI = db.prepare(
+    'INSERT INTO ai_request_logs (session_id, model, words, status, error_message, duration_ms) VALUES (?,?,?,?,?,?)'
+  );
+
   const results = {
     imported: [] as string[],
-    skipped: [] as string[],
+    skipped: [] as { word: string; reason: string }[],
     errors: [] as { word: string; error: string }[],
   };
 
@@ -161,18 +200,21 @@ router.post('/import/wiktionary-batch', adminGuard, async (req, res) => {
   for (let i = 0; i < words.length; i += CONCURRENCY) {
     const chunk = words.slice(i, i + CONCURRENCY);
     const chunkResults = await Promise.allSettled(
-      chunk.map(word => fetchWiktionaryWord(word).then(d => ({ word, draft: d })))
+      chunk.map(word => fetchWiktionaryWord(word).then(r => ({ word, ...r })))
     );
     for (const r of chunkResults) {
       if (r.status === 'fulfilled') {
         if (r.value.draft) {
           drafts.push(r.value.draft);
         } else {
-          results.skipped.push(r.value.word);
+          results.skipped.push({ word: r.value.word, reason: r.value.skipReason || 'unknown' });
+          logEvent.run(sessionId, r.value.word, 'skipped', r.value.skipReason || 'unknown', 0, 0);
         }
       } else {
-        const word = words[i + chunkResults.indexOf(r)];
+        const idx = chunkResults.indexOf(r);
+        const word = chunk[idx] || 'unknown';
         results.errors.push({ word, error: String(r.reason) });
+        logEvent.run(sessionId, word, 'error', null, 0, 0);
       }
     }
   }
@@ -184,6 +226,7 @@ router.post('/import/wiktionary-batch', adminGuard, async (req, res) => {
 
     for (let i = 0; i < needsAI.length; i += AI_BATCH) {
       const batch = needsAI.slice(i, i + AI_BATCH);
+      const t0 = Date.now();
       try {
         const inputs = batch.map(d => ({
           word: d.word,
@@ -194,6 +237,8 @@ router.post('/import/wiktionary-batch', adminGuard, async (req, res) => {
             .map(def => def.text),
         }));
         const aiResults = await generateDefinitions(inputs, geminiApiKey, geminiModel);
+        const duration = Date.now() - t0;
+        logAI.run(sessionId, geminiModel || 'default', JSON.stringify(batch.map(d => d.word)), 'success', null, duration);
 
         for (const ai of aiResults) {
           const draft = needsAI.find(d => d.word === ai.word);
@@ -206,7 +251,7 @@ router.post('/import/wiktionary-batch', adminGuard, async (req, res) => {
               examples: ai.basic.examples || [],
               sort_order: 0,
             });
-            draft.hasBasicFromSimple = false; // mark as AI-generated
+            draft.hasBasicFromSimple = false;
           }
           if (ai.advanced?.text) {
             draft.definitions.push({
@@ -219,8 +264,9 @@ router.post('/import/wiktionary-batch', adminGuard, async (req, res) => {
           }
         }
       } catch (e: any) {
+        const duration = Date.now() - t0;
+        logAI.run(sessionId, geminiModel || 'default', JSON.stringify(batch.map(d => d.word)), 'error', e.message, duration);
         console.error(`Gemini batch error (words ${i}-${i + AI_BATCH}):`, e.message);
-        // Continue without AI for this batch
       }
     }
 
@@ -230,6 +276,7 @@ router.post('/import/wiktionary-batch', adminGuard, async (req, res) => {
     );
     for (let i = 0; i < needsAdvanced.length; i += AI_BATCH) {
       const batch = needsAdvanced.slice(i, i + AI_BATCH);
+      const t0 = Date.now();
       try {
         const inputs = batch.map(d => ({
           word: d.word,
@@ -240,6 +287,9 @@ router.post('/import/wiktionary-batch', adminGuard, async (req, res) => {
             .map(def => def.text),
         }));
         const aiResults = await generateDefinitions(inputs, geminiApiKey, geminiModel);
+        const duration = Date.now() - t0;
+        logAI.run(sessionId, geminiModel || 'default', JSON.stringify(batch.map(d => d.word)), 'success', null, duration);
+
         for (const ai of aiResults) {
           const draft = needsAdvanced.find(d => d.word === ai.word);
           if (!draft || !ai.advanced?.text) continue;
@@ -252,6 +302,8 @@ router.post('/import/wiktionary-batch', adminGuard, async (req, res) => {
           });
         }
       } catch (e: any) {
+        const duration = Date.now() - t0;
+        logAI.run(sessionId, geminiModel || 'default', JSON.stringify(batch.map(d => d.word)), 'error', e.message, duration);
         console.error(`Gemini advanced batch error:`, e.message);
       }
     }
@@ -261,18 +313,33 @@ router.post('/import/wiktionary-batch', adminGuard, async (req, res) => {
   for (const draft of drafts) {
     const existing = db.prepare('SELECT id FROM words WHERE word = ?').get(draft.word.toLowerCase());
     if (existing) {
-      results.skipped.push(draft.word);
+      results.skipped.push({ word: draft.word, reason: 'already_in_database' });
+      logEvent.run(sessionId, draft.word, 'skipped', 'already_in_database', 0, 0);
       continue;
     }
     const r = importWords([draft]);
+    const defsCount = draft.definitions.length;
+    const aiUsed = draft.definitions.some(d => d.level === 'advanced' || (d.level === 'basic' && !draft.hasBasicFromSimple)) ? 1 : 0;
     if (r.errors.length > 0) {
       results.errors.push({ word: draft.word, error: r.errors[0] });
+      logEvent.run(sessionId, draft.word, 'error', null, defsCount, aiUsed);
     } else {
       results.imported.push(draft.word);
+      logEvent.run(sessionId, draft.word, 'imported', null, defsCount, aiUsed);
     }
   }
 
-  res.json(results);
+  // Update session totals
+  db.prepare(
+    'UPDATE import_sessions SET total_imported=?, total_skipped=?, total_errors=? WHERE id=?'
+  ).run(results.imported.length, results.skipped.length, results.errors.length, sessionId);
+
+  res.json({
+    sessionId,
+    imported: results.imported,
+    skipped: results.skipped,
+    errors: results.errors,
+  });
 });
 
 // POST /api/admin/import/test-gemini — test Gemini API key
@@ -289,6 +356,36 @@ router.post('/import/test-gemini', adminGuard, async (req, res) => {
   } catch (e: any) {
     res.status(400).json({ error: e.message });
   }
+});
+
+// GET /api/admin/logs — paginated list of import sessions
+router.get('/logs', adminGuard, (req, res) => {
+  const page = Math.max(1, parseInt(req.query.page as string) || 1);
+  const limit = Math.min(50, parseInt(req.query.limit as string) || 20);
+  const offset = (page - 1) * limit;
+
+  const total = (db.prepare('SELECT COUNT(*) as n FROM import_sessions').get() as any).n;
+  const sessions = db.prepare(
+    'SELECT * FROM import_sessions ORDER BY id DESC LIMIT ? OFFSET ?'
+  ).all(limit, offset);
+
+  res.json({ sessions, total, page, limit });
+});
+
+// GET /api/admin/logs/:id — full session detail
+router.get('/logs/:id', adminGuard, (req, res) => {
+  const session = db.prepare('SELECT * FROM import_sessions WHERE id=?').get(req.params.id);
+  if (!session) return res.status(404).json({ error: 'Session not found' });
+
+  const events = db.prepare(
+    'SELECT * FROM import_events WHERE session_id=? ORDER BY id ASC'
+  ).all(req.params.id);
+
+  const aiLogs = db.prepare(
+    'SELECT * FROM ai_request_logs WHERE session_id=? ORDER BY id ASC'
+  ).all(req.params.id);
+
+  res.json({ session, events, aiLogs });
 });
 
 export function importWords(words: any[]) {
