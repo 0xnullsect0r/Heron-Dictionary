@@ -1,0 +1,179 @@
+[
+  {
+    "word": "exist",
+    "part_of_speech": "verb",
+    "etymology": "From Latin 'existere' meaning 'to stand out, emerge, be visible', from 'ex-' (out) + 'sistere' (to stand). The word evolved from the idea of something standing out from nothingness into the broader meaning of simply being present or real.",
+    "idioms": [],
+    "synonyms": ["be", "live", "occur", "subsist", "endure"],
+    "related_words": ["existence", "existing", "existent", "non-existent"],
+    "usage_notes": "Often used to emphasize the reality or presence of something, especially in philosophical or abstract discussions.",
+    "definitions": [
+      {
+        "level": "basic",
+        "text": "To be real; to be present somewhere or to be alive.",
+        "sentences": [
+          "Do dragons exist, or are they only in stories?",
+          "She could not exist without water.",
+          "Problems still exist in the old building.",
+          "Some languages exist only in writing."
+        ],
+        "examples": [
+          "The company has existed for over one hundred years.",
+          "Dinosaurs once existed on Earth."
+        ],
+        "sort_order": 0
+      },
+      {
+        "level": "standard",
+        "text": "To have actual being; to have reality or objective presence in the world; to continue to live or be.",
+        "sentences": [
+          "The concept of justice exists across all human cultures.",
+          "Several copies of the original manuscript still exist today.",
+          "He could barely exist on his small income.",
+          "The organization exists to help the homeless."
+        ],
+        "examples": [
+          "A vacuum exists when there is no air or matter in a space.",
+          "These bacteria exist in extreme heat."
+        ],
+        "sort_order": 0
+      },
+      {
+        "level": "advanced",
+        "text": "To have being in a specified place or under specified conditions; to have existence as a concrete reality, as distinguished from mere possibility, potentiality, or conceptual being; to subsist; to continue to be despite adverse conditions.",
+        "sentences": [
+          "In some philosophical frameworks, abstract objects such as numbers are said to exist independently of any physical instantiation.",
+          "The treaty exists as a binding agreement between the two nations regardless of subsequent political changes.",
+          "One may ask whether consciousness can exist separately from the physical brain.",
+          "The tension between the two factions exists because neither is willing to compromise.",
+          "She was forced to exist on rationed supplies throughout the siege."
+        ],
+        "examples": [
+          "Heraclitus argued that only change itself can be said to permanently exist.",
+          "The paradox exists because both premises appear logically sound."
+        ],
+        "sort_order": 0
+      }
+    ]
+  },
+  {
+    "word": "define",
+    "part_of_speech": "verb",
+    "etymology": "From Latin 'definire', meaning 'to limit, determine, explain', from 'de-' (completely) + 'finire' (to bound, finish), from 'finis' (end, boundary). The original sense was about setting boundaries — marking out the edges of something so it could be understood.",
+    "idioms": [
+      { "phrase": "define oneself", "meaning": "To establish one's own identity or character through choices and actions." }
+    ],
+    "synonyms": ["specify", "describe", "explain", "characterize", "delimit"],
+    "related_words": ["definition", "defined", "definite", "indefinite", "redefine"],
+    "usage_notes": "The word 'define' carries the sense of drawing a boundary. When you define something, you are both including what it is and excluding what it is not.",
+    "definitions": [
+      {
+        "level": "basic",
+        "text": "To say clearly what something is or what a word means.",
+        "sentences": [
+          "The teacher asked us to define the word 'photosynthesis'.",
+          "Can you define what you mean by 'fair'?",
+          "The law defines theft as taking something that does not belong to you.",
+          "It is hard to define what makes a piece of music beautiful."
+        ],
+        "examples": [
+          "The dictionary defines 'courage' as the ability to do something even when you are afraid.",
+          "The contract defines the responsibilities of each party."
+        ],
+        "sort_order": 0
+      },
+      {
+        "level": "standard",
+        "text": "To state or describe exactly the nature, scope, or meaning of something; to determine or identify the essential qualities or meaning of a word, concept, or situation.",
+        "sentences": [
+          "The committee was asked to define the scope of the investigation.",
+          "Her early experiences defined her outlook on life.",
+          "The border defines the northern edge of the territory.",
+          "Scientists have defined several distinct categories of the disease."
+        ],
+        "examples": [
+          "It is notoriously difficult to define the concept of 'beauty'.",
+          "The architect defined the space with low walls and open ceilings."
+        ],
+        "sort_order": 0
+      },
+      {
+        "level": "advanced",
+        "text": "To state the precise meaning of a word, phrase, or concept with sufficient clarity to distinguish it from related terms; to determine the boundaries, extent, or nature of something with precision; in programming, to declare and specify the implementation of a function, variable, or data structure.",
+        "sentences": [
+          "To define a term rigorously, one must both specify the properties that all instances share and exclude the properties that would conflate it with adjacent concepts.",
+          "The legislation attempts to define 'reasonable force' in a way that applies across a wide range of circumstances.",
+          "Mathematicians define a prime number as any natural number greater than one that has no positive divisors other than one and itself.",
+          "The experience of loss in childhood defined his relationship to attachment throughout his adult life.",
+          "In the codebase, the function is defined before it is called, ensuring the compiler can resolve the reference."
+        ],
+        "examples": [
+          "Wittgenstein argued that some concepts resist precise definition because they rest on family resemblances rather than shared essence.",
+          "The programmer defined a recursive function to traverse the data tree."
+        ],
+        "sort_order": 0
+      }
+    ]
+  },
+  {
+    "word": "the",
+    "part_of_speech": "article",
+    "etymology": "Old English 'þe', an indeclinable form that replaced the earlier inflected demonstrative 'se'. Related to Old High German 'dëo' and Greek 'ho/he/to'. One of the oldest and most stable words in English, derived from Proto-Germanic demonstrative roots meaning 'that one' or 'this one'.",
+    "idioms": [
+      { "phrase": "the thing is", "meaning": "Used to introduce an explanation, qualification, or the real point of what is being said." },
+      { "phrase": "the more... the more", "meaning": "A comparative construction showing that two things increase or decrease together, as in 'the more you practice, the better you get'." }
+    ],
+    "synonyms": [],
+    "related_words": ["a", "an", "this", "that", "these", "those"],
+    "usage_notes": "The definite article 'the' is used to refer to a specific or previously identified person, place, or thing. It is the most commonly used word in the English language. It is distinct from the indefinite articles 'a' and 'an', which refer to something non-specific.",
+    "definitions": [
+      {
+        "level": "basic",
+        "text": "A word used before a noun to show that you are talking about a specific, known, or already-mentioned thing.",
+        "sentences": [
+          "Please close the door.",
+          "The dog is in the yard.",
+          "Did you see the movie last night?",
+          "Hand me the red pen, not the blue one."
+        ],
+        "examples": [
+          "The sun rises in the east.",
+          "She is the best player on the team."
+        ],
+        "sort_order": 0
+      },
+      {
+        "level": "standard",
+        "text": "The definite article, used before a singular or plural noun when the speaker or writer believes the listener or reader already knows which specific person or thing is being referred to; also used with superlatives and ordinal numbers, or to refer to something unique.",
+        "sentences": [
+          "The bridge was built in 1920.",
+          "She is the tallest person in the room.",
+          "The first chapter is the most important.",
+          "The rich have different problems than the poor.",
+          "He is the man I told you about."
+        ],
+        "examples": [
+          "The Thames runs through London.",
+          "It was the best of times, it was the worst of times."
+        ],
+        "sort_order": 0
+      },
+      {
+        "level": "advanced",
+        "text": "The definite article of the English language, used to particularize or individualize a noun already understood or made specific by context, prior mention, shared knowledge, or unique reference; used generically to refer to an entire class; used with superlatives, ordinal numbers, and in many fixed expressions; functions as a determiner and belongs to the closed class of function words.",
+        "sentences": [
+          "The use of 'the' before a noun signals that both speaker and hearer share a referent — an assumption that does not hold across all languages.",
+          "The construction 'the + adjective', as in 'the sublime' or 'the unknown', converts an adjective into an abstract noun referring to the quality as a class.",
+          "In formal English, 'the' may precede a proper noun for rhetorical emphasis, as in 'This is the Beethoven symphony that defined the era'.",
+          "Languages such as Russian and Japanese lack a direct equivalent of the definite article, making 'the' a frequent source of error for speakers of those languages learning English.",
+          "The sentence 'I saw the man with the telescope' is ambiguous because 'the' does not specify which man was seen or who held the telescope."
+        ],
+        "examples": [
+          "The phrase 'the more, the merrier' uses 'the' in its comparative adverbial function, a construction unique to English.",
+          "Historically, 'the' derives from the Old English demonstrative 'se', whose inflected forms collapsed into a single invariant form by the Middle English period."
+        ],
+        "sort_order": 0
+      }
+    ]
+  }
+]
