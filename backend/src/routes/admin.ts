@@ -95,12 +95,22 @@ router.delete('/definitions/:id', adminGuard, (req, res) => {
   res.json({ ok: true });
 });
 
-// POST /api/admin/import/wiktionary/:word — fetch draft from Wiktionary
+// POST /api/admin/import/wiktionary/:word — fetch draft from Wiktionary and save it
 router.post('/import/wiktionary/:word', adminGuard, async (req, res) => {
   try {
     const draft = await fetchWiktionaryWord(req.params.word);
     if (!draft) return res.status(404).json({ error: 'Word not found on Wiktionary' });
-    res.json(draft);
+
+    // Save the draft into the database
+    const result = importWords([draft]);
+    if (result.errors.length > 0 && result.imported === 0) {
+      return res.status(409).json({ error: result.errors[0] });
+    }
+
+    const row = db.prepare('SELECT id FROM words WHERE word=?').get(draft.word) as any;
+    const savedWord = db.prepare('SELECT * FROM words WHERE id=?').get(row.id) as any;
+    const defs = db.prepare('SELECT * FROM definitions WHERE word_id=? ORDER BY sort_order').all(row.id);
+    res.json({ ...draft, id: row.id, definitions: defs, word: savedWord.word });
   } catch (e: any) {
     res.status(500).json({ error: e.message });
   }
