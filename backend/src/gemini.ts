@@ -10,9 +10,12 @@ export interface GeminiWordResult {
   advanced: { text: string; sentences: string[]; examples: string[] } | null;
 }
 
+const DEFAULT_MODEL = 'gemini-2.5-flash-lite-preview';
+
 export async function generateDefinitions(
   inputs: GeminiWordInput[],
-  apiKey: string
+  apiKey: string,
+  model: string = DEFAULT_MODEL
 ): Promise<GeminiWordResult[]> {
   const prompt = `You are a dictionary expert following the Study Technology methodology. For each word below, write definitions at two levels.
 
@@ -47,7 +50,7 @@ Respond ONLY with a valid JSON array. No markdown, no explanation. Format:
 ]`;
 
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

@@ -11,6 +11,8 @@ import {
 } from '../../api/client';
 
 const GEMINI_KEY = 'heron:geminiKey';
+const GEMINI_MODEL_KEY = 'heron:geminiModel';
+const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash-lite-preview';
 
 type BulkStatus = 'idle' | 'loading-list' | 'ready' | 'importing' | 'done';
 
@@ -24,6 +26,8 @@ export function ImportPanel() {
   // --- Gemini AI Settings ---
   const [geminiKey, setGeminiKey] = useState(() => localStorage.getItem(GEMINI_KEY) || '');
   const [geminiInput, setGeminiInput] = useState(() => localStorage.getItem(GEMINI_KEY) || '');
+  const [geminiModel, setGeminiModel] = useState(() => localStorage.getItem(GEMINI_MODEL_KEY) || DEFAULT_GEMINI_MODEL);
+  const [geminiModelInput, setGeminiModelInput] = useState(() => localStorage.getItem(GEMINI_MODEL_KEY) || DEFAULT_GEMINI_MODEL);
   const [geminiTesting, setGeminiTesting] = useState(false);
   const [geminiStatus, setGeminiStatus] = useState<'idle' | 'ok' | 'error'>('idle');
   const [geminiError, setGeminiError] = useState('');
@@ -52,7 +56,9 @@ export function ImportPanel() {
 
   function saveGeminiKey() {
     localStorage.setItem(GEMINI_KEY, geminiInput);
+    localStorage.setItem(GEMINI_MODEL_KEY, geminiModelInput);
     setGeminiKey(geminiInput);
+    setGeminiModel(geminiModelInput);
     setGeminiStatus('idle');
     setGeminiError('');
   }
@@ -63,7 +69,7 @@ export function ImportPanel() {
     setGeminiStatus('idle');
     setGeminiError('');
     try {
-      const result = await adminTestGemini(geminiInput.trim());
+      const result = await adminTestGemini(geminiInput.trim(), geminiModelInput.trim() || DEFAULT_GEMINI_MODEL);
       if (result.ok) {
         setGeminiStatus('ok');
         saveGeminiKey();
@@ -109,7 +115,7 @@ export function ImportPanel() {
       const chunk = wordList.slice(i, i + CHUNK);
       setBulkProgress({ current: i, total: wordList.length, currentWord: chunk[0] });
       try {
-        const r = await adminBatchImport(chunk, geminiKey || undefined);
+        const r = await adminBatchImport(chunk, geminiKey || undefined, geminiModel || undefined);
         result.imported.push(...r.imported);
         result.skipped.push(...r.skipped);
         result.errors.push(...r.errors);
@@ -177,21 +183,35 @@ export function ImportPanel() {
             Optional: Add a Gemini API key to automatically generate <strong>Basic</strong> (when Simple Wiktionary doesn't have the word) and <strong>Advanced</strong> definitions during import. Get a free key at{' '}
             <a href="https://aistudio.google.com" target="_blank" rel="noopener" class="text-brand underline">aistudio.google.com</a>.
           </p>
-          <div class="flex gap-3">
-            <input
-              type="password"
-              value={geminiInput}
-              onInput={e => setGeminiInput((e.target as HTMLInputElement).value)}
-              placeholder="AIza..."
-              class="flex-1 bg-bg-base border border-border text-text-primary rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand placeholder-text-disabled font-mono text-sm"
-            />
-            <Button variant="secondary" onClick={testGeminiKey} disabled={geminiTesting || !geminiInput.trim()}>
-              {geminiTesting ? 'Testing...' : 'Test & Save'}
-            </Button>
+          <div class="space-y-2">
+            <label class="text-xs font-medium text-text-secondary uppercase tracking-wide">API Key</label>
+            <div class="flex gap-3">
+              <input
+                type="password"
+                value={geminiInput}
+                onInput={e => setGeminiInput((e.target as HTMLInputElement).value)}
+                placeholder="AIza..."
+                class="flex-1 bg-bg-base border border-border text-text-primary rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand placeholder-text-disabled font-mono text-sm"
+              />
+            </div>
           </div>
+          <div class="space-y-2">
+            <label class="text-xs font-medium text-text-secondary uppercase tracking-wide">Model Name</label>
+            <input
+              type="text"
+              value={geminiModelInput}
+              onInput={e => setGeminiModelInput((e.target as HTMLInputElement).value)}
+              placeholder={DEFAULT_GEMINI_MODEL}
+              class="w-full bg-bg-base border border-border text-text-primary rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand placeholder-text-disabled font-mono text-sm"
+            />
+            <p class="text-text-disabled text-xs">Default: <code class="font-mono">{DEFAULT_GEMINI_MODEL}</code>. Change if your API key only has access to a different model.</p>
+          </div>
+          <Button variant="secondary" onClick={testGeminiKey} disabled={geminiTesting || !geminiInput.trim()}>
+            {geminiTesting ? 'Testing...' : 'Test & Save'}
+          </Button>
           {geminiStatus === 'ok' && (
             <div class="flex items-center gap-2 text-success text-sm">
-              <CheckCircle size={16} /> API key valid and saved
+              <CheckCircle size={16} /> API key valid — using <code class="font-mono text-xs">{geminiModel}</code>
             </div>
           )}
           {geminiStatus === 'error' && (

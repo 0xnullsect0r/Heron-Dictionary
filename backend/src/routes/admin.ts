@@ -143,7 +143,7 @@ router.get('/import/wordlist', adminGuard, (req, res) => {
 
 // POST /api/admin/import/wiktionary-batch — bulk import with optional AI
 router.post('/import/wiktionary-batch', adminGuard, async (req, res) => {
-  const { words, geminiApiKey } = req.body as { words: string[]; geminiApiKey?: string };
+  const { words, geminiApiKey, geminiModel } = req.body as { words: string[]; geminiApiKey?: string; geminiModel?: string };
   if (!Array.isArray(words) || words.length === 0) {
     return res.status(400).json({ error: 'words array required' });
   }
@@ -193,7 +193,7 @@ router.post('/import/wiktionary-batch', adminGuard, async (req, res) => {
             .slice(0, 5)
             .map(def => def.text),
         }));
-        const aiResults = await generateDefinitions(inputs, geminiApiKey);
+        const aiResults = await generateDefinitions(inputs, geminiApiKey, geminiModel);
 
         for (const ai of aiResults) {
           const draft = needsAI.find(d => d.word === ai.word);
@@ -239,7 +239,7 @@ router.post('/import/wiktionary-batch', adminGuard, async (req, res) => {
             .slice(0, 5)
             .map(def => def.text),
         }));
-        const aiResults = await generateDefinitions(inputs, geminiApiKey);
+        const aiResults = await generateDefinitions(inputs, geminiApiKey, geminiModel);
         for (const ai of aiResults) {
           const draft = needsAdvanced.find(d => d.word === ai.word);
           if (!draft || !ai.advanced?.text) continue;
@@ -277,12 +277,13 @@ router.post('/import/wiktionary-batch', adminGuard, async (req, res) => {
 
 // POST /api/admin/import/test-gemini — test Gemini API key
 router.post('/import/test-gemini', adminGuard, async (req, res) => {
-  const { geminiApiKey } = req.body;
+  const { geminiApiKey, geminiModel } = req.body;
   if (!geminiApiKey) return res.status(400).json({ error: 'geminiApiKey required' });
   try {
     const results = await generateDefinitions(
       [{ word: 'test', partOfSpeech: 'noun', standardDefinitions: ['A procedure to assess quality'] }],
-      geminiApiKey
+      geminiApiKey,
+      geminiModel
     );
     res.json({ ok: true, sample: results[0] });
   } catch (e: any) {
