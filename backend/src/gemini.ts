@@ -10,7 +10,7 @@ export interface GeminiWordResult {
   advanced: { text: string; sentences: string[]; examples: string[] } | null;
 }
 
-const DEFAULT_MODEL = 'gemini-2.5-flash-lite-preview';
+const DEFAULT_MODEL = 'gemini-3.1-flash-lite-preview';
 
 export async function generateDefinitions(
   inputs: GeminiWordInput[],
